@@ -1,0 +1,93 @@
+Starting diagnostics at 2025-08-29 07:35:16
+
+===== System Information =====
+Operating System: Darwin
+MacOS Version: 10.16
+Architecture: ('64bit', '')
+Machine: x86_64
+Processor: i386
+Total RAM: 16.00 GB
+Available RAM: 5.41 GB
+Free Disk Space: 344.71 GB
+
+===== File System Information =====
+Current Directory: /Users/shivang.gupta/Documents/GitHub/agents
+Write permission: OK
+
+Files in Parent Directory:
+ - .DS_Store
+ - agents
+ - automator
+ - ecommerce-hooks-service
+ - example-terminal-backend
+ - kaat
+ - machine-learning
+ - monorepo
+ - multipay-portal-ui
+ - o2c-checkout-ui-v2
+ - pof-infra
+ - stripe-sample-code
+ - stripe-sample-code.zip
+ - stripe-terminal-js-demo
+ - sveltekit-bug-repro
+ - tensorflow
+ - tnf-o2c-stripe
+ - tnf-salesforce
+
+===== Git Repository Information =====
+Git Repository Root: /Users/shivang.gupta/Documents/GitHub/agents
+Current Commit: 0d59032018de0d92810af663ca029a9631597d74
+Remote Origin: https://github.com/ed-donner/agents.git
+
+===== Environment File Check =====
+WARNING: .env file not found in project root
+
+===== Virtualenv Check =====
+Virtualenv is active:
+Environment Path: /Users/shivang.gupta/Documents/GitHub/agents/.venv
+Environment Name: .venv
+
+Python Environment:
+Python Version: 3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 08:28:27) [Clang 14.0.6 ]
+Python Executable: /Users/shivang.gupta/Documents/GitHub/agents/.venv/bin/python
+
+Required Package Versions:
+openai: 1.102.0
+python-dotenv: 1.1.1
+requests: 2.32.5
+gradio: 5.44.1
+openai-agents: 0.2.9
+
+===== Network Connectivity Check =====
+SSL Version: OpenSSL 3.0.15 3 Sep 2024
+✓ Connected to https://www.google.com
+  Response time: 0.23s
+
+Performing bandwidth test using speedtest-cli...
+Download speed: 31.47 Mbps
+Upload speed: 57.01 Mbps
+
+===== Environment Variables Check =====
+
+PYTHONPATH is not set, as expected.
+
+Python sys.path:
+ - /Users/shivang.gupta/Documents/GitHub/agents/setup
+ - /opt/anaconda3/lib/python312.zip
+ - /opt/anaconda3/lib/python3.12
+ - /opt/anaconda3/lib/python3.12/lib-dynload
+ - /Users/shivang.gupta/Documents/GitHub/agents/.venv/lib/python3.12/site-packages
+ - /Users/shivang.gupta/Documents/GitHub/agents/.venv/lib/python3.12/site-packages/setuptools/_vendor
+WARNING: OPENAI_API_KEY environment variable is not set after calling load_dotenv()
+
+===== Additional Diagnostics =====
+Temp directory is writable: /var/folders/77/_s_lk00j4qx3zt256vl23sg00000gp/T
+
+===== Warnings Found =====
+The following warnings were detected. They might not prevent the program from running but could cause unexpected behavior:
+- .env file not found in project root
+- OPENAI_API_KEY environment variable is not set after calling load_dotenv()
+
+
+Completed diagnostics at 2025-08-29 07:35:41
+

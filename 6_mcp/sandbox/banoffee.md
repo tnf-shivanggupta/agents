@@ -1,27 +1,25 @@
-# Banoffee Pie Recipe
-
-## Ingredients
-- 4 bananas, sliced
-- 394g caramel or dulce de leche
-- 300ml double cream
-- Dark chocolate (optional)
-
-### For the pastry
-- 100g butter, chilled (plus extra for greasing)
-- 200g plain flour
-- 1 medium egg, separated
-- 1 tbsp golden caster sugar
-
-## Method
-1. Make the pastry case: Put butter and flour in a food processor and pulse until it resembles fresh breadcrumbs. Add egg yolk and sugar, pulse again, then add very cold water a tbsp at a time until dough comes together.
-2. Knead dough gently by hand until smooth ball forms. Wrap in cling film and chill for 30 minutes.
-3. Heat oven to 190C/170C fan/gas 4. Grease a 23cm loose bottomed fluted tart tin. Roll out pastry and line the tin, leaving about 0.5cm of pastry over the edge and snip to length.
-4. Line base with baking parchment and weigh down with baking beans/uncooked rice. Bake for 15 minutes. Remove parchment and beans, brush pastry with beaten egg white and bake another 15-20 minutes until golden and cooked. Cool completely.
-5. Spread half the caramel on the pastry case, layer bananas on top, then cover with remaining caramel. Chill in fridge.
-6. Whip the cream until thick and spoon over the tart. Grate dark chocolate over to garnish if using.
-
-## Notes
-- Serves 8-10.
-- Prep time: 30 minutes.
-- Cook time: 30-35 minutes.
-- An easy family favorite. Recommended to serve with a generous dollop of cream.
+# Banoffee Recipe
+## Ingredients:
+* 1 cup granulated sugar
+* 1/2 cup light brown soft sugar
+* 1/2 cup all-purpose flour
+* 1/2 teaspoon baking powder
+* 1/4 teaspoon salt
+* 1/2 cup unsalted butter, melted
+* 2 large eggs
+* 2 teaspoons pure vanilla extract
+* 1 cup heavy cream
+* 1 cup sliced bananas
+* 1 cup toffee bits
+* 1 cup chopped walnuts (optional)
+## Instructions:
+1. Preheat oven to 350°F (180°C).
+2. Line an 8-inch round cake pan with parchment paper.
+3. In a medium bowl, whisk together flour, baking powder, and salt.
+4. In a large bowl, use an electric mixer to beat together sugars and melted butter until well combined.
+5. Beat in eggs one at a time, followed by vanilla extract.
+6. Gradually mix in the flour mixture, then stir in heavy cream.
+7. Fold in sliced bananas, toffee bits, and chopped walnuts (if using).
+8. Pour batter into prepared cake pan and smooth top.
+9. Bake for 35-40 minutes or until a toothpick inserted into the center comes out clean.
+10. Remove from oven and let cool in pan for 10 minutes, then transfer to a wire rack to cool completely.

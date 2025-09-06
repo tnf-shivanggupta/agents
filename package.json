@@ -3,6 +3,8 @@
     "start": "node 1_foundations/1_lab1.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
+    "@stripe/mcp": "^0.2.4",
     "axios": "^1.11.0",
     "dotenv": "^17.2.1"
   }

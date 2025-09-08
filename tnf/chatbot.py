@@ -1,13 +1,11 @@
 import os
 from dotenv import load_dotenv
 import asyncio
-from agents import Agent, Runner, trace, function_tool, OpenAIChatCompletionsModel
+from agents import Agent, Runner, trace, OpenAIChatCompletionsModel
 from agents.mcp import MCPServerStdio
 from openai import AsyncOpenAI
 import gradio as gr
 from typing import List, Dict
-import threading
-import time
 
 load_dotenv(override=True)
 
@@ -55,7 +53,7 @@ class StripeAgentManager:
         try:
             sandbox_path = os.path.abspath(os.path.join(os.getcwd(), "tnf/sandbox"))
             files_params = {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", sandbox_path]}
-            stripe_params = {"command": "python", "args": ["tnf/stripe_tools_server.py"]}
+            stripe_params = {"command": "python", "args": ["tnf/tools/tool_stripe.py"]}
             
             print("🚀 Initializing MCP servers...")
             
@@ -81,14 +79,22 @@ class StripeAgentManager:
             await self.cleanup()
             raise
     
-    async def chat(self, message: str) -> str:
+    async def chat(self, message: str, history: List[Dict]) -> str:
         """Send message to agent and get response"""
         if not self.is_initialized:
             await self.initialize()
         
+        messages = []
+        for msg in history:
+            item = {"role": msg["role"], "content": msg["content"]}
+            messages.append(item)
+        
+        messages.append({"role": 'user', "content": message})
+        
+        print(f"🗨️ User: {messages}")
         try:
             with trace("stripe_chat"):
-                result = await Runner.run(self.agent, message)
+                result = await Runner.run(self.agent, messages)
                 response = result.final_output
                 
                 # Add to conversation history
@@ -138,12 +144,12 @@ class GradioInterface:
     
     async def chat_fn(self, message: str, history: List[Dict]) -> tuple[List[Dict], str]:
         """Handle chat interactions in Gradio"""
+        
         if not message.strip():
             return history, ""
-        
         try:
             # Use asyncio.run for better event loop management
-            response = await self.agent_manager.chat(message)
+            response = await self.agent_manager.chat(message, history)
             
             # Add to gradio history in messages format
             history.append({"role": "user", "content": message})
@@ -227,7 +233,7 @@ def create_gradio_app():
                 chatbot = gr.Chatbot(
                     label="Conversation", 
                     height=500,
-                    avatar_images=["👤", "🤖"],
+                    avatar_images=["tnf/assets/user.png", "tnf/assets/assistant.png"],
                     type='messages'
                 )
                 
@@ -235,7 +241,7 @@ def create_gradio_app():
                     msg = gr.Textbox(
                         label="Message", 
                         placeholder="Ask me about Stripe payment intents, file operations, or anything else!",
-                        lines=2,
+                        lines=1,
                         scale=4
                     )
                     send_btn = gr.Button("Send 📤", variant="primary", scale=1)

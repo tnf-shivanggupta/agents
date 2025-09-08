@@ -26,8 +26,8 @@ groq_model = OpenAIChatCompletionsModel(model=MODEL, openai_client=groq_client)
 instructions = """
 You are a helpful assistant that answers the user's questions related to Stripe.
 Use the provided tools to answer the questions.
-If you don't find the answer in the tools, reply with "I don't know".
-Save results when asked and provide detailed explanations.
+If you don't find the answer in the tools, reply calmly if you don't have any tool to handle request.
+Give short response.
 """
 
 # Global variables for MCP servers and agent

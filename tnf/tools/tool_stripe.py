@@ -1,3 +1,4 @@
+from typing import Optional
 from mcp.server.fastmcp import FastMCP
 import os
 import json
@@ -70,8 +71,10 @@ async def get_pi(id: str, salesOrg: str, currency: str) -> str:
         salesOrg: The sales organization (e.g., 'IN01')
         currency: The currency (e.g., 'USD')
     """
+    
     print("Calling get_pi_status with", id, salesOrg, currency, flush=True, file=sys.stderr)
-
+    salesOrg = salesOrg.upper()
+    currency = currency.upper()
     try:
         stripeSecretKey = getStripeKey(salesOrg, currency)
         stripe.api_key = stripeSecretKey
@@ -84,6 +87,41 @@ async def get_pi(id: str, salesOrg: str, currency: str) -> str:
 
     except Exception as e:
         error_msg = f"❌ Error retrieving PaymentIntent {id}: {e}"
+        print(error_msg, flush=True, file=sys.stderr)
+        return {"error": str(e), "id": id, "salesOrg": salesOrg, "currency": currency}
+
+@mcp.tool()
+async def refund_pi(id: str, amount: Optional[int] = None, salesOrg: str = "", currency: str = "") -> str:
+    """Refund a Stripe PaymentIntent.  
+    - If `amount` is missing, ask the user if they want a full refund.  
+    - Always confirm before actually refunding. 
+
+
+    Args:
+        id: The Stripe PaymentIntent ID (e.g., 'pi_123')
+        amount: Amount to refund (e.g., 20.33)
+        salesOrg: The sales organization (e.g., 'IN01')
+        currency: The currency (e.g., 'USD')
+    """
+    amountInt = amount * 100
+    salesOrg = salesOrg.upper()
+    currency = currency.upper()
+
+    try:
+        stripeSecretKey = getStripeKey(salesOrg, currency)
+        stripe.api_key = stripeSecretKey
+
+        pi = stripe.Refund.create(
+            payment_intent=id,
+            amount=amountInt,
+        )
+        result = json.dumps(pi)
+
+        print("refund_pi result", result, flush=True,file=sys.stderr)
+        return result
+
+    except Exception as e:
+        error_msg = f"❌ Error refunding PaymentIntent {id}: {e}"
         print(error_msg, flush=True, file=sys.stderr)
         return {"error": str(e), "id": id, "salesOrg": salesOrg, "currency": currency}
 

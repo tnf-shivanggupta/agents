@@ -6,73 +6,47 @@ from agents.mcp import MCPServerStdio
 from openai import AsyncOpenAI
 import gradio as gr
 from typing import List, Dict
+from custom_agents.agent_stripe import stripe_agent
+from custom_agents.agent_salesforce import salesforce_agent
+from commons.variables import _chatCompletionModel as groq_model, _groq_api_key as groq_api_key 
 
 load_dotenv(override=True)
 
-# Creating groq model
-MODEL = 'openai/gpt-oss-20b'  # Use 'openai/gpt-4o' for paid version
-GROQ_BASE_URL = "https://api.groq.com/openai/v1"
-groq_api_key = os.getenv("GROQ_API_KEY")  # Add your Groq API key to your .env file
-
-# Point OpenAI client to Groq endpoint
-groq_client = AsyncOpenAI(
-    api_key=groq_api_key,
-    base_url=GROQ_BASE_URL
-)
-
-groq_model = OpenAIChatCompletionsModel(model=MODEL, openai_client=groq_client)
-
 # Instructions for Stripe assistant
 instructions = """
-You are a helpful assistant that answers the user's questions related to Stripe.
-Use the provided tools to answer the questions.
-If you don't find the answer in the tools, reply calmly if you don't have any tool to handle request.
+You are a helpful assistant that answers the user's questions.
+Use the provided tools and handoffs to answer the questions.
+If you don't find the answer in the tools and handoffs, reply calmly if you don't have any tool to handle request.
 Give short response.
 """
 
-# Global variables for MCP servers and agent
-mcp_server_files = None
-mcp_server_stripe = None
-stripe_agent = None
-
-class StripeAgentManager:
+class ManagerAgent:
     """Manages the Stripe agent and MCP servers"""
     
     def __init__(self):
         self.agent = None
-        self.mcp_server_files = None
-        self.mcp_server_stripe = None
         self.is_initialized = False
         self.conversation_history = []
+        
     
     async def initialize(self):
-        """Initialize MCP servers and agent"""
         if self.is_initialized:
             return
         
         try:
-            sandbox_path = os.path.abspath(os.path.join(os.getcwd(), "tnf/sandbox"))
-            files_params = {"command": "npx", "args": ["@modelcontextprotocol/server-filesystem", sandbox_path]}
-            stripe_params = {"command": "python", "args": ["tnf/tools/tool_stripe.py"]}
+            # Initialize stripe agent first
+            await stripe_agent.initialize()
+            await salesforce_agent.initialize()
             
-            print("🚀 Initializing MCP servers...")
-            
-            # Initialize MCP servers
-            self.mcp_server_files = MCPServerStdio(params=files_params, client_session_timeout_seconds=600)
-            self.mcp_server_stripe = MCPServerStdio(params=stripe_params, client_session_timeout_seconds=600)
-
-            await self.mcp_server_files.connect()
-            await self.mcp_server_stripe.connect()
-            # Create agent
+            # Create manager agent with stripe handoff
             self.agent = Agent(
-                name="stripe_assistant", 
+                name="manager_agent", 
                 instructions=instructions, 
                 model=groq_model,
-                mcp_servers=[self.mcp_server_files, self.mcp_server_stripe]
+                handoffs=[stripe_agent.agent, salesforce_agent.agent]
             )
             
             self.is_initialized = True
-            print("✅ MCP servers and agent initialized successfully")
             
         except Exception as e:
             print(f"❌ Failed to initialize: {e}")
@@ -93,7 +67,7 @@ class StripeAgentManager:
         
         print(f"🗨️ User: {messages}")
         try:
-            with trace("stripe_chat"):
+            with trace("tnf_chat"):
                 result = await Runner.run(self.agent, messages)
                 response = result.final_output
                 
@@ -108,13 +82,12 @@ class StripeAgentManager:
     
     async def cleanup(self):
         """Clean up resources"""
-        if self.mcp_server_files:
-            await self.mcp_server_files.close()
-        if self.mcp_server_stripe:
-            await self.mcp_server_stripe.close()
-
-        self.is_initialized = False
-        print("🧹 Cleaned up MCP servers")
+        try:
+            await stripe_agent.cleanup()
+            self.is_initialized = False
+            print("🧹 Cleaned up resources")
+        except Exception as e:
+            print(f"❌ Cleanup error: {e}")
     
     def clear_history(self):
         """Clear conversation history"""
@@ -134,12 +107,12 @@ class StripeAgentManager:
         return summary
 
 # Global agent manager
-agent_manager = StripeAgentManager()
+agent_manager = ManagerAgent()
 
 class GradioInterface:
     """Gradio UI for the Stripe Agent"""
     
-    def __init__(self, agent_manager: StripeAgentManager):
+    def __init__(self, agent_manager: ManagerAgent):
         self.agent_manager = agent_manager
     
     async def chat_fn(self, message: str, history: List[Dict]) -> tuple[List[Dict], str]:
@@ -168,10 +141,6 @@ class GradioInterface:
         """Clear chat history"""
         self.agent_manager.clear_history()
         return [], ""
-    
-    def get_conversation_summary(self) -> str:
-        """Get conversation summary"""
-        return self.agent_manager.get_history_summary()
     
     def test_stripe_connection(self) -> str:
         """Test Stripe connection with a sample query"""
@@ -208,21 +177,23 @@ def create_gradio_app():
     """
     
     with gr.Blocks(
-        title="Stripe Agent Assistant", 
+        title="T&F Assistant", 
         theme=gr.themes.Soft(),
         css=custom_css
     ) as app:
         
         # Header
         gr.Markdown("""
-        # 🚀 Stripe Agent Assistant
+        # 🚀 T&F Assistant
         
-        An intelligent assistant that can help you with Stripe operations using MCP servers.
+        An intelligent assistant that can help you with your queries.
         
-        **Features:**
-        - 💳 Check payment intent status
-        - 📁 File operations (read/write)
-        - 🔧 Stripe API interactions
+        **Current Features:**
+        - 💳 Stripe
+            - 💰 Payment Intent Details
+            - Refunds
+        - Salesforce
+            - Order Details
         - 💬 Natural language processing
         """)
         
@@ -240,7 +211,7 @@ def create_gradio_app():
                 with gr.Row():
                     msg = gr.Textbox(
                         label="Message", 
-                        placeholder="Ask me about Stripe payment intents, file operations, or anything else!",
+                        placeholder="Ask me about Stripe payment intents, refunds, salesforce orders, or anything else!",
                         lines=1,
                         scale=4
                     )
@@ -248,63 +219,11 @@ def create_gradio_app():
                 
                 with gr.Row():
                     clear_btn = gr.Button("Clear Chat 🗑️", variant="secondary")
-                    summary_btn = gr.Button("Show Summary 📊", variant="secondary")
                 
                 # Event handlers
                 msg.submit(interface.chat_fn, [msg, chatbot], [chatbot, msg])
                 send_btn.click(interface.chat_fn, [msg, chatbot], [chatbot, msg])
                 clear_btn.click(interface.clear_chat, outputs=[chatbot, msg])
-            
-            # Examples Tab
-            with gr.TabItem("💡 Examples"):
-                gr.Markdown("""
-                ## Example Queries
-                
-                Try these example queries to get started:
-                """)
-                
-                examples = [
-                    "Get the status of payment intent pi_2355",
-                    "Check payment intent pi_1234567890 and save the result to payment_status.md",
-                    "List all files in the sandbox directory",
-                    "Create a summary report of recent Stripe activities",
-                    "Help me understand Stripe webhook events"
-                ]
-                
-                for example in examples:
-                    with gr.Row():
-                        gr.Textbox(value=example, interactive=False, scale=4)
-                        example_btn = gr.Button("Try it! 🚀", scale=1)
-                        example_btn.click(
-                            lambda ex=example: interface.chat_fn(ex, []),
-                            outputs=[chatbot, msg]
-                        )
-            
-            # Tools & Status Tab  
-            with gr.TabItem("🔧 Tools & Status"):
-                
-                with gr.Row():
-                    with gr.Column():
-                        gr.Markdown("### 🧪 Connection Test")
-                        test_btn = gr.Button("Test Stripe Connection", variant="primary")
-                        test_output = gr.Textbox(label="Test Result", lines=5)
-                        
-                        test_btn.click(interface.test_stripe_connection, outputs=test_output)
-                    
-                    with gr.Column():
-                        gr.Markdown("### 📊 Conversation Summary")
-                        summary_btn_tools = gr.Button("Get Summary", variant="secondary")
-                        summary_output = gr.Textbox(label="Summary", lines=10)
-                        
-                        summary_btn_tools.click(interface.get_conversation_summary, outputs=summary_output)
-                
-                gr.Markdown("""
-                ### 🛠️ Available Tools
-                - **Stripe Payment Intent Status**: Check the status of payment intents
-                - **File Operations**: Read and write files in the sandbox directory  
-                - **Stripe API Integration**: Access various Stripe endpoints
-                - **Natural Language Processing**: Understand and respond to complex queries
-                """)
         
         # Footer
         gr.Markdown("""
@@ -312,8 +231,6 @@ def create_gradio_app():
         💡 **Tips:** 
         - Be specific in your queries for better results
         - Use natural language - the assistant understands context
-        - Check the Examples tab for inspiration
-        - Use the Tools & Status tab to test connections
         """)
     
     return app
@@ -344,7 +261,7 @@ async def main():
 
 def launch_gradio():
     """Launch Gradio interface"""
-    print("🌟 Starting Stripe Agent with Gradio UI...")
+    print("🌟 Starting Manager Agent with Gradio UI...")
     
     # Check environment variables
     if not groq_api_key:

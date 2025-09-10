@@ -21,7 +21,7 @@ def getStripeAccountConfig():
     if stripeAccountConfigs:
         return stripeAccountConfigs
     """
-    Call an external service to get the Stripe secret key for a given salesOrg and currency.
+    Call an external service to get the Stripe secret key for a given sales_org and currency.
     Replace the URL and logic as per your actual service.
     """
     url = f"http://internal-ap-non-prod.lb.anypointdns.net/uat/api/v1/system/sfdc/stripeAccountConfigs"
@@ -35,48 +35,48 @@ def getStripeAccountConfig():
     else:
         raise Exception(f"Failed to fetch Stripe key: {response.status_code} {response.text}")
     
-def getStripeKey(salesOrg: str, currency: str) -> str:
+def getStripeKey(sales_org: str, currency: str) -> str:
     """Get the Stripe secret key for a given sales organization and currency.
     In a real implementation, this would query a database or configuration service.
     Here, we return a placeholder value for demonstration purposes.
 
     Args:
-        salesOrg: The sales organization identifier
+        sales_org: The sales organization identifier
         currency: The currency code (e.g., 'usd', 'eur')
 
     Returns:
         The Stripe secret key as a string
     """
     # Placeholder logic - replace with actual implementation
-    print(GET_STRIPE_KEY_FROM_SALESFORCE, salesOrg, currency,flush=True, file=sys.stderr)
+    print(GET_STRIPE_KEY_FROM_SALESFORCE, sales_org, currency,flush=True, file=sys.stderr)
     if GET_STRIPE_KEY_FROM_SALESFORCE == '0':
-        return os.getenv(f"STRIPE_SECRET_KEY_{salesOrg}_{currency}")
+        return os.getenv(f"STRIPE_SECRET_KEY_{sales_org}_{currency}")
     else:
         if not stripeAccountConfigs:
             getStripeAccountConfig()
         
-        # Find the config matching salesOrg and currency
+        # Find the config matching sales_org and currency
         for config in stripeAccountConfigs:
-            if config.get("TF_Sales_Org__c") == salesOrg and config.get("CurrencyIsoCode") == currency:
+            if config.get("TF_Sales_Org__c") == sales_org and config.get("CurrencyIsoCode") == currency:
                 return config.get("SecretKey__c")
         # If not found, return a placeholder or raise an error
     raise Exception('Error in getting secret key')
 
 @mcp.tool()
-async def get_pi(id: str, salesOrg: str, currency: str) -> str:
+async def get_pi(id: str, sales_org: str, currency: str) -> str:
     """Retrieve Stripe payment intent. After calling stripe, you have to find the required fields from the response.
 
     Args:
         id: The Stripe PaymentIntent ID (e.g., 'pi_123')
-        salesOrg: The sales organization (e.g., 'IN01')
+        sales_org: The sales organization (e.g., 'IN01')
         currency: The currency (e.g., 'USD')
     """
     
-    print("Calling get_pi_status with", id, salesOrg, currency, flush=True, file=sys.stderr)
-    salesOrg = salesOrg.upper()
+    print("Calling get_pi_status with", id, sales_org, currency, flush=True, file=sys.stderr)
+    sales_org = sales_org.upper()
     currency = currency.upper()
     try:
-        stripeSecretKey = getStripeKey(salesOrg, currency)
+        stripeSecretKey = getStripeKey(sales_org, currency)
         stripe.api_key = stripeSecretKey
 
         pi = stripe.PaymentIntent.retrieve(id)
@@ -88,10 +88,10 @@ async def get_pi(id: str, salesOrg: str, currency: str) -> str:
     except Exception as e:
         error_msg = f"❌ Error retrieving PaymentIntent {id}: {e}"
         print(error_msg, flush=True, file=sys.stderr)
-        return {"error": str(e), "id": id, "salesOrg": salesOrg, "currency": currency}
+        return {"error": str(e), "id": id, "sales_org": sales_org, "currency": currency}
 
 @mcp.tool()
-async def refund_pi(id: str, amount: Optional[int] = None, salesOrg: str = "", currency: str = "") -> str:
+async def refund_pi(id: str, amount: Optional[int] = None, sales_org: str = "", currency: str = "") -> str:
     """Refund a Stripe PaymentIntent.  
     - If `amount` is missing, ask the user if they want a full refund.  
     - Always confirm before actually refunding. 
@@ -100,15 +100,15 @@ async def refund_pi(id: str, amount: Optional[int] = None, salesOrg: str = "", c
     Args:
         id: The Stripe PaymentIntent ID (e.g., 'pi_123')
         amount: Amount to refund (e.g., 20.33)
-        salesOrg: The sales organization (e.g., 'IN01')
+        sales_org: The sales organization (e.g., 'IN01')
         currency: The currency (e.g., 'USD')
     """
     amountInt = amount * 100
-    salesOrg = salesOrg.upper()
+    sales_org = sales_org.upper()
     currency = currency.upper()
 
     try:
-        stripeSecretKey = getStripeKey(salesOrg, currency)
+        stripeSecretKey = getStripeKey(sales_org, currency)
         stripe.api_key = stripeSecretKey
 
         pi = stripe.Refund.create(
@@ -123,7 +123,7 @@ async def refund_pi(id: str, amount: Optional[int] = None, salesOrg: str = "", c
     except Exception as e:
         error_msg = f"❌ Error refunding PaymentIntent {id}: {e}"
         print(error_msg, flush=True, file=sys.stderr)
-        return {"error": str(e), "id": id, "salesOrg": salesOrg, "currency": currency}
+        return {"error": str(e), "id": id, "sales_org": sales_org, "currency": currency}
 
 if __name__ == "__main__":
     mcp.run(transport='stdio')

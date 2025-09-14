@@ -7,6 +7,7 @@ from openai import AsyncOpenAI
 import gradio as gr
 from typing import List, Dict
 from custom_agents.agent_stripe import stripe_agent
+from custom_agents.agent_websearch import websearch_agent
 from custom_agents.agent_salesforce import salesforce_agent
 from commons.variables import _chatCompletionModel as groq_model, _groq_api_key as groq_api_key 
 
@@ -37,13 +38,14 @@ class ManagerAgent:
             # Initialize stripe agent first
             await stripe_agent.initialize()
             await salesforce_agent.initialize()
+            await websearch_agent.initialize()
             
             # Create manager agent with stripe handoff
             self.agent = Agent(
                 name="manager_agent", 
                 instructions=instructions, 
                 model=groq_model,
-                handoffs=[stripe_agent.agent, salesforce_agent.agent]
+                handoffs=[stripe_agent.agent, salesforce_agent.agent, websearch_agent.agent]
             )
             
             self.is_initialized = True
@@ -70,6 +72,7 @@ class ManagerAgent:
             with trace("tnf_chat"):
                 result = await Runner.run(self.agent, messages)
                 response = result.final_output
+                print('Agent Used:', result.last_agent.name)
                 
                 # Add to conversation history
                 self.conversation_history.append({"user": message, "assistant": response})
